@@ -27,6 +27,7 @@ function start() {
         "View ALL Roles",
         "Add Employee",
         "Add Department",
+        "Add Role",
         "Update Employee Role"
       ]
     })
@@ -46,6 +47,9 @@ function start() {
           break;
         case "Add Department":
           addDepartment();
+          break;
+        case "Add Role":
+          addRole();
           break;
         case "Update Employee Role":
           updateEmployee();
@@ -134,7 +138,6 @@ function addEmployee() {
         }
       ])
       .then(response => {
-        console.log(response);
         let chosenItem;
         for (let i = 0; i < result.length; i++) {
           if (result[i].title === response.role) {
@@ -177,8 +180,6 @@ function addDepartment() {
       }
     ])
     .then(response => {
-      console.log(response);
-
       connection.query(
         "INSERT INTO department SET ?",
         {
@@ -191,6 +192,72 @@ function addDepartment() {
         }
       );
     });
+}
+
+function addRole() {
+  connection.query("SELECT * FROM department", (err, result) => {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "role_title",
+          type: "input",
+          message: "What is the role name?",
+          validate: input => {
+            if (input !== "" && input != null) {
+              return true;
+            } else {
+              return "Role name cannot be blank";
+            }
+          }
+        },
+        {
+          name: "salary",
+          type: "input",
+          message: "How much is the salary?",
+          validate: input => {
+            if (input !== "" && input != null && !isNaN(input)) {
+              return true;
+            } else {
+              return "Salary cannot be blank and should be a number";
+            }
+          }
+        },
+        {
+          name: "department",
+          type: "list",
+          message: "What's the role's department?",
+          choices: function() {
+            var deptArray = [];
+            for (let i = 0; i < result.length; i++) {
+              deptArray.push(result[i].name);
+            }
+            return deptArray;
+          }
+        }
+      ])
+      .then(response => {
+        let chosenItem;
+        for (let i = 0; i < result.length; i++) {
+          if (result[i].name === response.department) {
+            chosenItem = result[i];
+          }
+        }
+        connection.query(
+          "INSERT INTO role SET ?",
+          {
+            title: response.role_title,
+            salary: response.salary,
+            department_id: chosenItem.id
+          },
+          (err, res) => {
+            if (err) throw err;
+            console.log("Role Added!");
+            start();
+          }
+        );
+      });
+  });
 }
 
 function updateEmployee() {

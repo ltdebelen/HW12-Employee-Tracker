@@ -21,12 +21,20 @@ function start() {
       name: "action",
       type: "list",
       message: "What would you like to do?",
-      choices: ["View ALL Employees", "Add Employee", "Update Employee Role"]
+      choices: [
+        "View ALL Employees",
+        "View ALL Departments",
+        "Add Employee",
+        "Update Employee Role"
+      ]
     })
     .then(response => {
       switch (response.action) {
         case "View ALL Employees":
           viewAllEmployees();
+          break;
+        case "View ALL Departments":
+          viewAllDepartments();
           break;
         case "Add Employee":
           addEmployee();
@@ -48,6 +56,18 @@ function viewAllEmployees() {
   connection.query(query, (err, res) => {
     if (err) throw err;
     console.table("ALL EMPLOYEES", res);
+    start();
+  });
+}
+
+function viewAllDepartments() {
+  const query = `
+  SELECT name AS Departments 
+  FROM department;
+  `;
+  connection.query(query, (err, res) => {
+    if (err) throw err;
+    console.table("ALL DEPARTMENTS", res);
     start();
   });
 }
@@ -142,7 +162,7 @@ function updateEmployee() {
           [{ role_id: response.role }],
           (err, result) => {
             if (err) throw err;
-            console.log(`Successfully updated ${response.employee} 's role!`);
+            console.log(`Successfully updated ${response.employee}'s role!`);
             start();
           }
         );

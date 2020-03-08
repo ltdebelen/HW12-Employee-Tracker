@@ -27,6 +27,10 @@ function start() {
       switch (response.action) {
         case "View ALL Employees":
           viewAllEmployees();
+          break;
+        case "Add Employee":
+          addEmployee();
+          break;
       }
     });
 }
@@ -43,4 +47,43 @@ function viewAllEmployees() {
     console.table("ALL EMPLOYEES", res);
     start();
   });
+}
+
+function addEmployee() {
+  inquirer
+    .prompt([
+      {
+        name: "first_name",
+        type: "input",
+        message: "What is the employee's first name?"
+      },
+      {
+        name: "last_name",
+        type: "input",
+        message: "What is the employee's last name?"
+      },
+      {
+        name: "role",
+        type: "list",
+        message:
+          "What is the role? (1 - Sales Person, 2 - Software Engineer, 3 - Accountant, 4 - Lawyer)",
+        choices: [1, 2, 3, 4]
+      }
+    ])
+    .then(response => {
+      connection.query(
+        "INSERT INTO employee SET ?",
+        {
+          first_name: response.first_name,
+          last_name: response.last_name,
+          role_id: response.role,
+          manager_id: null
+        },
+        (err, res) => {
+          if (err) throw err;
+          console.log("Employee Added!");
+          start();
+        }
+      );
+    });
 }

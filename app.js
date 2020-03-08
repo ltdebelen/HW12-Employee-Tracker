@@ -26,6 +26,7 @@ function start() {
         "View ALL Departments",
         "View ALL Roles",
         "Add Employee",
+        "Add Department",
         "Update Employee Role"
       ]
     })
@@ -42,6 +43,9 @@ function start() {
           break;
         case "Add Employee":
           addEmployee();
+          break;
+        case "Add Department":
+          addDepartment();
           break;
         case "Update Employee Role":
           updateEmployee();
@@ -154,6 +158,39 @@ function addEmployee() {
         );
       });
   });
+}
+
+function addDepartment() {
+  inquirer
+    .prompt([
+      {
+        name: "department_name",
+        type: "input",
+        message: "What is the department name?",
+        validate: input => {
+          if (input !== "" && input != null) {
+            return true;
+          } else {
+            return "Department name cannot be blank";
+          }
+        }
+      }
+    ])
+    .then(response => {
+      console.log(response);
+
+      connection.query(
+        "INSERT INTO department SET ?",
+        {
+          name: response.department_name
+        },
+        (err, res) => {
+          if (err) throw err;
+          console.log("Department Added!");
+          start();
+        }
+      );
+    });
 }
 
 function updateEmployee() {

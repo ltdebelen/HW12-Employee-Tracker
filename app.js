@@ -24,6 +24,7 @@ function start() {
       choices: [
         "View ALL Employees",
         "View ALL Departments",
+        "View ALL Roles",
         "Add Employee",
         "Update Employee Role"
       ]
@@ -35,6 +36,9 @@ function start() {
           break;
         case "View ALL Departments":
           viewAllDepartments();
+          break;
+        case "View ALL Roles":
+          viewAllRoles();
           break;
         case "Add Employee":
           addEmployee();
@@ -72,57 +76,84 @@ function viewAllDepartments() {
   });
 }
 
+function viewAllRoles() {
+  const query = `
+  SELECT title, salary
+  FROM role;
+  `;
+  connection.query(query, (err, res) => {
+    if (err) throw err;
+    console.table("ALL ROLES", res);
+    start();
+  });
+}
+
 function addEmployee() {
-  inquirer
-    .prompt([
-      {
-        name: "first_name",
-        type: "input",
-        message: "What is the employee's first name?",
-        validate: input => {
-          if (input !== "" && input != null) {
-            return true;
-          } else {
-            return "First Name cannot be blank";
-          }
-        }
-      },
-      {
-        name: "last_name",
-        type: "input",
-        message: "What is the employee's last name?",
-        validate: input => {
-          if (input !== "" && input != null) {
-            return true;
-          } else {
-            return "Last name cannot be blank";
-          }
-        }
-      },
-      {
-        name: "role",
-        type: "list",
-        message:
-          "What is the role? (1 - Sales Person, 2 - Software Engineer, 3 - Accountant, 4 - Lawyer)",
-        choices: [1, 2, 3, 4]
-      }
-    ])
-    .then(response => {
-      connection.query(
-        "INSERT INTO employee SET ?",
+  connection.query("SELECT * FROM role", (err, result) => {
+    inquirer
+      .prompt([
         {
-          first_name: response.first_name,
-          last_name: response.last_name,
-          role_id: response.role,
-          manager_id: null
+          name: "first_name",
+          type: "input",
+          message: "What is the employee's first name?",
+          validate: input => {
+            if (input !== "" && input != null) {
+              return true;
+            } else {
+              return "First Name cannot be blank";
+            }
+          }
         },
-        (err, res) => {
-          if (err) throw err;
-          console.log("Employee Added!");
-          start();
+        {
+          name: "last_name",
+          type: "input",
+          message: "What is the employee's last name?",
+          validate: input => {
+            if (input !== "" && input != null) {
+              return true;
+            } else {
+              return "Last name cannot be blank";
+            }
+          }
+        },
+        {
+          name: "role",
+          type: "list",
+          message: "What's the user's role?",
+          choices: function() {
+            var rolesArray = [];
+            for (let i = 0; i < result.length; i++) {
+              rolesArray.push(result[i].title);
+            }
+            return rolesArray;
+          }
         }
-      );
-    });
+      ])
+      .then(response => {
+        console.log(response);
+        let chosenItem;
+        for (let i = 0; i < result.length; i++) {
+          if (result[i].title === response.role) {
+            chosenItem = result[i];
+          }
+        }
+
+        connection.query(
+          "INSERT INTO employee SET ?",
+          {
+            first_name: response.first_name,
+            last_name: response.last_name,
+            role_id: chosenItem.id,
+            manager_id: null
+          },
+          (err, res) => {
+            if (err) throw err;
+            console.log("Employee Added!");
+            start();
+          }
+        );
+      });
+  });
 }
 
 function updateEmployee() {

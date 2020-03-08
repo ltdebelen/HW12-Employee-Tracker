@@ -21,7 +21,7 @@ function start() {
       name: "action",
       type: "list",
       message: "What would you like to do?",
-      choices: ["View ALL Employees", "Add Employee", "Remove Employee"]
+      choices: ["View ALL Employees", "Add Employee", "Update Employee Role"]
     })
     .then(response => {
       switch (response.action) {
@@ -30,6 +30,9 @@ function start() {
           break;
         case "Add Employee":
           addEmployee();
+          break;
+        case "Update Employee Role":
+          updateEmployee();
           break;
       }
     });
@@ -55,12 +58,26 @@ function addEmployee() {
       {
         name: "first_name",
         type: "input",
-        message: "What is the employee's first name?"
+        message: "What is the employee's first name?",
+        validate: input => {
+          if (input !== "" && input != null) {
+            return true;
+          } else {
+            return "First Name cannot be blank";
+          }
+        }
       },
       {
         name: "last_name",
         type: "input",
-        message: "What is the employee's last name?"
+        message: "What is the employee's last name?",
+        validate: input => {
+          if (input !== "" && input != null) {
+            return true;
+          } else {
+            return "Last name cannot be blank";
+          }
+        }
       },
       {
         name: "role",
@@ -86,4 +103,49 @@ function addEmployee() {
         }
       );
     });
+}
+
+function updateEmployee() {
+  connection.query("SELECT * FROM employee", (err, result) => {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "employee",
+          type: "list",
+          message: "Select the employee you want to update",
+          choices: function() {
+            const employeesArray = [];
+            result.forEach(employee => {
+              employeesArray.push(
+                `${employee.first_name} ${employee.last_name}`
+              );
+            });
+            return employeesArray;
+          }
+        },
+        {
+          name: "role",
+          type: "list",
+          message:
+            "What is the role? (1 - Sales Person, 2 - Software Engineer, 3 - Accountant, 4 - Lawyer)",
+          choices: [1, 2, 3, 4]
+        }
+      ])
+      .then(response => {
+        // need to parse first name and last name for query
+        const employee_name = response.employee;
+        const employeeArr = employee_name.split(" ");
+
+        connection.query(
+          `UPDATE employee SET ? WHERE first_name = '${employeeArr[0]}' AND last_name = '${employeeArr[1]}'`,
+          [{ role_id: response.role }],
+          (err, result) => {
+            if (err) throw err;
+            console.log(`Successfully updated ${response.employee} 's role!`);
+            start();
+          }
+        );
+      });
+  });
 }

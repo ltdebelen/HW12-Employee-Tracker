@@ -158,45 +158,55 @@ function addEmployee() {
 
 function updateEmployee() {
   connection.query("SELECT * FROM employee", (err, result) => {
-    if (err) throw err;
-    inquirer
-      .prompt([
-        {
-          name: "employee",
-          type: "list",
-          message: "Select the employee you want to update",
-          choices: function() {
-            const employeesArray = [];
-            result.forEach(employee => {
-              employeesArray.push(
-                `${employee.first_name} ${employee.last_name}`
-              );
-            });
-            return employeesArray;
+    connection.query("SELECT * FROM role", (err, result2) => {
+      if (err) throw err;
+      inquirer
+        .prompt([
+          {
+            name: "employee",
+            type: "list",
+            message: "Select the employee you want to update",
+            choices: function() {
+              const employeesArray = [];
+              result.forEach(employee => {
+                employeesArray.push(
+                  `${employee.first_name} ${employee.last_name}`
+                );
+              });
+              return employeesArray;
+            }
+          },
+          {
+            name: "role",
+            type: "list",
+            message: "What is the user's new role?",
+            choices: function() {
+              var rolesArray = [];
+              for (let i = 0; i < result2.length; i++) {
+                rolesArray.push(result2[i].title);
+              }
+              return rolesArray;
+            }
           }
-        },
-        {
-          name: "role",
-          type: "list",
-          message:
-            "What is the role? (1 - Sales Person, 2 - Software Engineer, 3 - Accountant, 4 - Lawyer)",
-          choices: [1, 2, 3, 4]
-        }
-      ])
-      .then(response => {
-        // need to parse first name and last name for query
-        const employee_name = response.employee;
-        const employeeArr = employee_name.split(" ");
-
-        connection.query(
-          `UPDATE employee SET ? WHERE first_name = '${employeeArr[0]}' AND last_name = '${employeeArr[1]}'`,
-          [{ role_id: response.role }],
-          (err, result) => {
-            if (err) throw err;
-            console.log(`Successfully updated ${response.employee}'s role!`);
-            start();
+        ])
+        .then(response => {
+          for (let i = 0; i < result2.length; i++) {
+            if (result2[i].title === response.role) {
+              chosenItem = result2[i];
+            }
           }
-        );
-      });
+          const employee_name = response.employee;
+          const employeeArr = employee_name.split(" ");
+          connection.query(
+            `UPDATE employee SET ? WHERE first_name = '${employeeArr[0]}' AND last_name = '${employeeArr[1]}'`,
+            [{ role_id: chosenItem.id }],
+            (err, result) => {
+              if (err) throw err;
+              console.log(`Successfully updated ${response.employee}'s role!`);
+              start();
+            }
+          );
+        });
+    });
   });
 }
